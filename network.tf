@@ -33,6 +33,18 @@ resource "azurerm_network_security_group" "allow_winrm" {
   }
 }
 
+resource "azurerm_public_ip" "public_ip" {
+  name                = "${var.name_prefix}-public-ip"
+  resource_group_name = var.network_rg.name
+  location            = var.location
+  allocation_method   = "Static"
+
+  tags = {
+    createdBy   = var.owner
+    environment = "test"
+  }
+}
+
 resource "azurerm_network_interface" "instance_ni" {
   name                = "${var.name_prefix}-${random_string.name_postfix.result}-instance-ni"
   location            = var.location
@@ -42,6 +54,7 @@ resource "azurerm_network_interface" "instance_ni" {
     name                          = "instance"
     subnet_id                     = var.subnet != null ? var.subnet.id : null
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.public_ip.id
   }
 
   tags = {
