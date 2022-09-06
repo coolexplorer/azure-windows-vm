@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/coolexplorer/azure-windows-vm/compare/v1.0.0...v1.0.1) (2022-09-06)
+
+
+### Bug Fixes
+
+* changed the file name that will be made by Terraform docs ([9a0a884](https://github.com/coolexplorer/azure-windows-vm/commit/9a0a884c238c690861219077a3c6d648d42c8aa2))
+
 # 1.0.0 (2022-09-06)
 
 
