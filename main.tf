@@ -56,3 +56,126 @@ resource "azurerm_windows_virtual_machine" "instance" {
     protocol = "Http"
   }
 }
+
+resource "null_resource" "change_drive_letter" {
+  triggers = {
+    vm_id   = azurerm_windows_virtual_machine.instance.id
+    vm_name = azurerm_windows_virtual_machine.instance.name
+  }
+
+  provisioner "file" {
+    connection {
+      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      type     = "winrm"
+      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
+      password = var.bootstrap_windows_password
+      use_ntlm = true
+      https    = true
+      insecure = true
+    }
+
+    source      = "${path.module}/provisioners/change-page-drive.ps1"
+    destination = "C:/Windows/Temp/change-page-drive.ps1"
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      type     = "winrm"
+      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
+      password = var.bootstrap_windows_password
+      use_ntlm = true
+      https    = true
+      insecure = true
+    }
+
+    inline = [
+      "pwsh.exe -ExecutionPolicy RemoteSigned -File C:/Windows/Temp/change-page-drive.ps1"
+    ]
+  }
+
+  provisioner "local-exec" {
+    command = "sleep ${var.reboot_sleep}"
+  }
+
+  depends_on = [
+    null_resource.wait_gpo
+  ]
+}
+
+resource "azurerm_managed_disk" "empty_disk" {
+  count                = length(local.empty_data_disks) > 0 && length(local.presynced_data_disks) == 0 ? length(local.empty_data_disks) : 0
+  name                 = "${azurerm_windows_virtual_machine.instance.name}-data-disk${count.index}"
+  location             = var.location
+  resource_group_name  = var.resource_group
+  storage_account_type = var.os_disk_storage_account_type
+  create_option        = "Empty"
+  disk_size_gb         = local.empty_data_disks[count.index].size
+
+  tags = {
+    createdBy   = var.owner
+    environment = "test"
+    vm_name     = azurerm_windows_virtual_machine.instance.name
+  }
+
+  depends_on = [
+    null_resource.clean_up
+  ]
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "empty_disk_attachment" {
+  count              = length(local.empty_data_disks) > 0 && length(local.presynced_data_disks) == 0 ? length(local.empty_data_disks) : 0
+  managed_disk_id    = azurerm_managed_disk.empty_disk[count.index].id
+  virtual_machine_id = azurerm_windows_virtual_machine.instance.id
+  lun                = count.index + 1
+  caching            = "ReadWrite"
+
+  depends_on = [
+    azurerm_managed_disk.empty_disk
+  ]
+}
+
+resource "null_resource" "initialize_empty_disk" {
+  triggers = {
+    empty_disk_id = azurerm_managed_disk.empty_disk[count.index].id
+  }
+
+  count = length(local.empty_data_disks) > 0 && length(local.presynced_data_disks) == 0 ? length(local.empty_data_disks) : 0
+
+  provisioner "file" {
+    connection {
+      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      type     = "winrm"
+      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
+      password = var.bootstrap_windows_password
+      use_ntlm = true
+      https    = true
+      insecure = true
+      timeout  = "30m"
+    }
+
+    source      = "${path.module}/provisioners/initialize-disk.ps1"
+    destination = "C:/Windows/Temp/initialize-disk.ps1"
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      type     = "winrm"
+      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
+      password = var.bootstrap_windows_password
+      use_ntlm = true
+      https    = true
+      insecure = true
+    }
+
+    inline = [
+      "pwsh.exe -ExecutionPolicy RemoteSigned -File C:/Windows/Temp/initialize-disk.ps1",
+      "pwsh.exe -c Remove-Item C:/Windows/Temp/initialize-disk.ps1 -Force"
+    ]
+  }
+
+  depends_on = [
+    azurerm_virtual_machine_data_disk_attachment.empty_disk_attachment
+  ]
+}
