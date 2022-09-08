@@ -4,14 +4,14 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.20 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.4.2 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | 3.4.3 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.20 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.4.2 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.4.3 |
 
 ## Modules
 
@@ -26,7 +26,7 @@ No modules.
 | [azurerm_network_security_group.allow_winrm](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
 | [azurerm_public_ip.public_ip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) | resource |
 | [azurerm_windows_virtual_machine.instance](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine) | resource |
-| [random_string.name_postfix](https://registry.terraform.io/providers/hashicorp/random/3.4.2/docs/resources/string) | resource |
+| [random_string.name_postfix](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 
 ## Inputs
 
