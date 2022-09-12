@@ -16,6 +16,18 @@ variable "owner" {
   default     = "Allen"
 }
 
+variable "name_postfix" {
+  type        = string
+  description = "The name postfix that the lenght is limited by 4 characters"
+  default     = null
+}
+
+variable "timezone" {
+  type        = string
+  description = "Time zone"
+  default     = "Pacific Standard Time"
+}
+
 # Compute
 variable "compute_rg" {
   type        = any

@@ -1,7 +1,13 @@
 resource "random_string" "name_postfix" {
+  count   = var.name_postfix != null ? 1 : 0
   length  = 4
   numeric = true
   special = false
+}
+
+locals {
+  postfix          = var.name_postfix != null ? var.name_postfix : random_string.random[0].result
+  empty_data_disks = var.disks != null && length(var.disks) > 1 ? slice(var.disks, 1, length(var.disks)) : []
 }
 
 resource "azurerm_windows_virtual_machine" "instance" {
@@ -21,7 +27,7 @@ resource "azurerm_windows_virtual_machine" "instance" {
   patch_mode               = "Manual"
   enable_automatic_updates = false
   provision_vm_agent       = true
-  timezone                 = "Pacific Standard Time"
+  timezone                 = var.timezone
 
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
@@ -65,10 +71,10 @@ resource "null_resource" "change_drive_letter" {
 
   provisioner "file" {
     connection {
-      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      host     = azurerm_windows_virtual_machine.instance.public_ip_address
       type     = "winrm"
-      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
-      password = var.bootstrap_windows_password
+      user     = var.admin_username
+      password = var.admin_password
       use_ntlm = true
       https    = true
       insecure = true
@@ -80,10 +86,10 @@ resource "null_resource" "change_drive_letter" {
 
   provisioner "remote-exec" {
     connection {
-      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      host     = azurerm_windows_virtual_machine.instance.public_ip_address
       type     = "winrm"
-      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
-      password = var.bootstrap_windows_password
+      user     = var.admin_username
+      password = var.admin_password
       use_ntlm = true
       https    = true
       insecure = true
@@ -99,12 +105,12 @@ resource "null_resource" "change_drive_letter" {
   }
 
   depends_on = [
-    null_resource.wait_gpo
+    azurerm_windows_virtual_machine.instance
   ]
 }
 
 resource "azurerm_managed_disk" "empty_disk" {
-  count                = length(local.empty_data_disks) > 0 && length(local.presynced_data_disks) == 0 ? length(local.empty_data_disks) : 0
+  count                = length(local.empty_data_disks) > 0 ? length(local.empty_data_disks) : 0
   name                 = "${azurerm_windows_virtual_machine.instance.name}-data-disk${count.index}"
   location             = var.location
   resource_group_name  = var.resource_group
@@ -119,12 +125,12 @@ resource "azurerm_managed_disk" "empty_disk" {
   }
 
   depends_on = [
-    null_resource.clean_up
+    null_resource.change_drive_letter
   ]
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "empty_disk_attachment" {
-  count              = length(local.empty_data_disks) > 0 && length(local.presynced_data_disks) == 0 ? length(local.empty_data_disks) : 0
+  count              = length(local.empty_data_disks) ? length(local.empty_data_disks) : 0
   managed_disk_id    = azurerm_managed_disk.empty_disk[count.index].id
   virtual_machine_id = azurerm_windows_virtual_machine.instance.id
   lun                = count.index + 1
@@ -136,22 +142,21 @@ resource "azurerm_virtual_machine_data_disk_attachment" "empty_disk_attachment" 
 }
 
 resource "null_resource" "initialize_empty_disk" {
-  triggers = {
-    empty_disk_id = azurerm_managed_disk.empty_disk[count.index].id
-  }
+  count = length(local.empty_data_disks) > 0 ? 1 : 0
 
-  count = length(local.empty_data_disks) > 0 && length(local.presynced_data_disks) == 0 ? length(local.empty_data_disks) : 0
+  triggers = {
+    empty_disk_ids = [for disk in azurerm_managed_disk.empty_disk : disk.id]
+  }
 
   provisioner "file" {
     connection {
-      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      host     = azurerm_windows_virtual_machine.instance.public_ip_address
       type     = "winrm"
-      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
-      password = var.bootstrap_windows_password
+      user     = var.admin_username
+      password = var.admin_password
       use_ntlm = true
       https    = true
       insecure = true
-      timeout  = "30m"
     }
 
     source      = "${path.module}/provisioners/initialize-disk.ps1"
@@ -160,10 +165,10 @@ resource "null_resource" "initialize_empty_disk" {
 
   provisioner "remote-exec" {
     connection {
-      host     = "${azurerm_windows_virtual_machine.instance.name}.${var.domain_name}"
+      host     = azurerm_windows_virtual_machine.instance.public_ip_address
       type     = "winrm"
-      user     = "${var.bootstrap_windows_shortdomain}\\${var.bootstrap_windows_user}"
-      password = var.bootstrap_windows_password
+      user     = var.admin_username
+      password = var.admin_password
       use_ntlm = true
       https    = true
       insecure = true
