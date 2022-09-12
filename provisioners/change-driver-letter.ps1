@@ -12,7 +12,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 # Prerequisites
 # 1. Turn off AutomaticManagedPangingfile for changing Temporary Storage Drive letter (Refer to initialize-config.ps1)
-# 2. Restart VM 
+# 2. Restart VM
 
 $newDriveLetter = "T"
 
@@ -29,5 +29,5 @@ $Drive | Set-CimInstance -Property @{DriveLetter = "$($newDriveLetter):" }
 "wmic pagefileset list /format:list" | cmd
 
 # Reboot
-Write-Host "Restart VM..."
+Write-Information "Restart VM..."
 Restart-Computer -Force

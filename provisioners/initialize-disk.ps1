@@ -8,11 +8,11 @@ if ($(@($disks | Measure-Object).Count) -ne 0) {
     $count = 0
     foreach ($disk in $disks) {
         $driveLetter = $driveLetters[$count].ToString()
-        Write-Host "Found raw disk count: $(@($disk | Measure-Object).Count)"
-        Write-Host "Raw disk list: $($disk | Format-List | Out-String)"
+        Write-Information "Found raw disk count: $(@($disk | Measure-Object).Count)"
+        Write-Information "Raw disk list: $($disk | Format-List | Out-String)"
 
-        Write-Host "Initailizing the disk."
-        Write-Host "Drive letter: $driveLetter"
+        Write-Information "Initailizing the disk."
+        Write-Information "Drive letter: $driveLetter"
 
         Write-Verbose "Target Disk: $($disk | Format-List | Out-String)"
 
@@ -21,7 +21,7 @@ if ($(@($disks | Measure-Object).Count) -ne 0) {
         New-Partition -UseMaximumSize -DriveLetter $driveLetter |
         Format-Volume -FileSystem NTFS -NewFileSystemLabel "data$($count + 1)" -Confirm:$false -Force
 
-        Write-Host "Finished Initializing disk"
+        Write-Information "Finished Initializing disk"
         $count++
     }
 }
