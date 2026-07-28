@@ -3,14 +3,14 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.20 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | 3.4.2 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.20 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 5.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.4.2 |
 
 ## Modules
@@ -35,7 +35,7 @@ No modules.
 | <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | n/a | `any` | n/a | yes |
 | <a name="input_admin_username"></a> [admin\_username](#input\_admin\_username) | Credential | `any` | n/a | yes |
 | <a name="input_compute_rg"></a> [compute\_rg](#input\_compute\_rg) | The resource group object for the compute resources | `any` | n/a | yes |
-| <a name="input_disks"></a> [disks](#input\_disks) | Storage | <pre>list(object({<br>    size = number<br>  }))</pre> | `[]` | no |
+| <a name="input_disks"></a> [disks](#input\_disks) | Storage | <pre>list(object({<br/>    size = number<br/>  }))</pre> | `[]` | no |
 | <a name="input_image_offer"></a> [image\_offer](#input\_image\_offer) | MS marketplace image offer | `string` | `"WindowsServer"` | no |
 | <a name="input_image_publisher"></a> [image\_publisher](#input\_image\_publisher) | MS marketplace image publisher | `string` | `"MicrosoftWindowsServer"` | no |
 | <a name="input_image_sku"></a> [image\_sku](#input\_image\_sku) | MS marketplace image sku | `string` | `"2019-Datacenter"` | no |
